@@ -4,9 +4,13 @@ Simple router for Next.js api. inspired by itty-router
 
 ### Example Usage
 
+```bash
+npm i @arisris/next-api-router
+```
+
 ```typescript
 
-import Router from "next-api-router";
+import Router from "@arisris/next-api-router";
 
 let r = Router({
   key: "any",
