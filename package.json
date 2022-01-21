@@ -1,0 +1,33 @@
+{
+  "name": "next-api-router",
+  "version": "1.0.0",
+  "description": "Simple router for Next.js api. inspired by itty-router",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rm -rf dist && node ./build.js && tsc --emitDeclarationOnly --outDir dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arisris/next-api-router.git"
+  },
+  "keywords": [
+    "Next.js",
+    "Api",
+    "Vercel",
+    "itty-router"
+  ],
+  "author": "Aris Riswanto",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arisris/next-api-router/issues"
+  },
+  "homepage": "https://github.com/arisris/next-api-router#readme",
+  "devDependencies": {
+    "esbuild": "^0.14.12",
+    "next": "^12.0.1",
+    "typescript": "^4.5.4"
+  }
+}
