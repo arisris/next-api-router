@@ -2,12 +2,12 @@
   "name": "@arisris/next-api-router",
   "version": "1.0.3",
   "description": "Simple router for Next.js api. inspired by itty-router",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/mjs/index.js",
+  "types": "index.d.ts",
   "private": false,
   "scripts": {
-    "build": "rm -rf dist && node ./build.js && tsc --emitDeclarationOnly --outDir dist",
+    "build": "rm -rf index.d.ts dist && tsc --module commonjs --outDir dist/cjs --declarationDir ./ && tsc --module es6 --outDir dist/mjs --declaration false",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,7 +27,6 @@
   },
   "homepage": "https://github.com/arisris/next-api-router#readme",
   "devDependencies": {
-    "esbuild": "^0.14.12",
     "next": "^12.0.1",
     "typescript": "^4.5.4"
   }

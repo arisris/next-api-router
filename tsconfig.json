@@ -7,7 +7,7 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "outDir": "lib",
+    "outDir": "dist",
     "skipLibCheck": true
   }
 }
