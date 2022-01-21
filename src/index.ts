@@ -1,34 +1,65 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-export interface NextApiRouterRequest extends NextApiRequest {
-  params?: Record<any, any>;
+export interface NextApiRouteRequest extends NextApiRequest {
+  params?: Record<string, any>;
+  locals?: Record<string, any>;
 }
 export type NextApiRouteHandler = (
-  req: NextApiRouterRequest,
+  req: NextApiRouteRequest,
   res: NextApiResponse
 ) => void | Promise<void>;
-export class TimeoutError extends Error {}
-export type OnErrorCallback = (
-  e: Error,
-  req: NextApiRouterRequest,
+export type NextApiRouteExtraHandler = (
+  pathNameOrPattern: string,
+  ...nextApiHandlers: NextApiRouteHandler[]
+) => NextApiRouteMethodProxyType;
+// maybe its posible method exposed to proxy useful for autocomplete
+// but all method still posible
+export type NextApiRouteMaybePosibleMethod =
+  | "get"
+  | "post"
+  | "put"
+  | "patch"
+  | "delete"
+  | "options"
+  | "connect"
+  | "all"
+  | "handle";
+export type NextApiRouteMethodProxyType = {
+  [key in NextApiRouteMaybePosibleMethod]: NextApiRouteExtraHandler;
+} & { handle: NextApiRouteHandler };
+
+export class NextapiRouteTimeoutError extends Error {}
+export class NextapiRouteNotFoundError extends Error {}
+export type NextapiRouteOnErrorCallback = (
+  error: Error,
+  req: NextApiRouteRequest,
   res: NextApiResponse
 ) => void;
-export function NextApiRouter(options?: {
+export type NextapiRouteOptions = {
   key?: string;
   timeout?: number;
-  onError?: OnErrorCallback;
-}) {
+  onError?: NextapiRouteOnErrorCallback;
+};
+
+export function NextApiRoute(options?: NextapiRouteOptions) {
+  let timeOut: NodeJS.Timeout;
   let { key, timeout, onError } = Object.assign(
       {
         key: "any",
         timeout: 10000,
-        onError: (e: Error, _: NextApiRouterRequest, res: NextApiResponse) => {
-          if (e instanceof TimeoutError) {
-            res.status(500).send("<h3>Timeout Error</h3>");
-          } else {
-            throw e;
+        onError: (e: Error, _: NextApiRouteRequest, res: NextApiResponse) => {
+          let msg = e.message,
+            code = 500;
+          if (e instanceof NextapiRouteTimeoutError) {
+            msg = "Timeout Error";
           }
-        },
+          if (e instanceof NextapiRouteNotFoundError) {
+            msg = "404 Page Not Found";
+          } else {
+            msg = "Internal Server Error";
+          }
+          res.status(code).json({ msg });
+        }
       },
       options
     ),
@@ -44,6 +75,8 @@ export function NextApiRouter(options?: {
           .join("/");
         delete req.query[key];
         // Regex its taken from original itty-router package. Not Modified
+        // Maybe in future fixed with support of caching pattern
+        // for now i use this
         let regex = (u: string) =>
             RegExp(
               `^${(baseUrl + u)
@@ -53,32 +86,36 @@ export function NextApiRouter(options?: {
                 .replace(/\.(?=[\w(])/, "\\.")
                 .replace(/\)\.\?\(([^\[]+)\[\^/g, "?)\\.?($1(?<=\\.)[^\\.")}/*$`
             ),
-          match: RegExpExecArray,
-          next: any,
-          timeOut: NodeJS.Timeout;
+          next: any;
         if (timeout) {
           timeOut = setTimeout(() => {
             clearTimeout(timeOut);
-            onError(new TimeoutError("Request timeout"), req, res);
+            onError(new NextapiRouteTimeoutError("Request timeout"), req, res);
           }, timeout);
         }
-        for (let [method, pathname, handlers] of routes) {
-          if (
-            (method === req.method || method === "ALL") &&
-            (match = regex(pathname).exec(req.url))
-          ) {
-            req.params = match.groups;
-            for (let handler of handlers) {
-              next = await handler(req, res);
-              if (res.writableFinished) {
-                if (timeOut) clearTimeout(timeOut);
-                break;
-              }
-              if (next) continue;
+        let notFound = new NextapiRouteNotFoundError("404 Page Not Found");
+        let arrr = routes
+          .filter(([m]) => m === req.method || m === "ALL")
+          .map(([a, b, c]) => [a, regex(b).exec(req.url), c])
+          .filter(([_, p]) => p);
+
+        if (arrr.length === 0) throw notFound;
+
+        for (let [_, rgx, handlers] of arrr) {
+          if (!rgx) throw notFound;
+          req.params = rgx.groups;
+          req.locals = {};
+          for (let handler of handlers) {
+            next = await handler(req, res);
+            if (res.writableFinished) {
+              if (timeOut) clearTimeout(timeOut);
+              break;
             }
+            if (next) continue;
           }
         }
       } catch (e) {
+        if (timeOut) clearTimeout(timeOut);
         return onError(e, req, res);
       }
     },
@@ -87,16 +124,13 @@ export function NextApiRouter(options?: {
         ? obj.handle.bind(obj)
         : (url: string, ...handlers: any) =>
             routes.push([prop.toUpperCase(), url, handlers]) && c;
-  type HH = (m: string, ...k: NextApiRouteHandler[]) => void;
-  return new Proxy<{
-    [k: string]: NextApiRouteHandler & HH;
-  }>(
+  return new Proxy<NextApiRouteMethodProxyType>(
     {
       // @ts-ignore
-      handle,
+      handle
     },
     { get }
   );
 }
 
-export default NextApiRouter;
+export default NextApiRoute;
