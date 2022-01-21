@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 
 export interface NextApiRouterRequest extends NextApiRequest {
   params?: Record<any, any>;
@@ -8,12 +8,12 @@ export type NextApiRouteHandler = (
   res: NextApiResponse
 ) => void | Promise<void>;
 export class TimeoutError extends Error {}
-type OnErrorCallback = (
+export type OnErrorCallback = (
   e: Error,
   req: NextApiRouterRequest,
   res: NextApiResponse
 ) => void;
-export default function NextApiRouter(options?: {
+export function NextApiRouter(options?: {
   key?: string;
   timeout?: number;
   onError?: OnErrorCallback;
@@ -98,3 +98,5 @@ export default function NextApiRouter(options?: {
     { get }
   );
 }
+
+export default NextApiRouter;
