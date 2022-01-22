@@ -51,15 +51,23 @@ export function NextApiRoute(options?: NextapiRouteOptions) {
           let msg = e.message,
             code = 500;
           if (e instanceof NextapiRouteTimeoutError) {
+            code = 408;
             msg = "Timeout Error";
           }
           if (e instanceof NextapiRouteNotFoundError) {
+            code = 404;
             msg = "404 Page Not Found";
           } else {
             msg = "Internal Server Error";
           }
-          res.status(code).json({ msg });
-        }
+          let body = JSON.stringify({ code, msg });
+          res
+            .writeHead(code, {
+              "Content-Length": Buffer.byteLength(body),
+              "Content-Type": "application/json",
+            })
+            .end(body);
+        },
       },
       options
     ),
@@ -127,7 +135,7 @@ export function NextApiRoute(options?: NextapiRouteOptions) {
   return new Proxy<NextApiRouteMethodProxyType>(
     {
       // @ts-ignore
-      handle
+      handle,
     },
     { get }
   );
