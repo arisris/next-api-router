@@ -7,7 +7,7 @@ export interface NextApiRouteRequest extends NextApiRequest {
 export type NextApiRouteHandler = (
   req: NextApiRouteRequest,
   res: NextApiResponse
-) => void | Promise<void>;
+) => void | Promise<void> | boolean | Promise<boolean>;
 export type NextApiRouteExtraHandler = (
   pathNameOrPattern: string,
   ...nextApiHandlers: NextApiRouteHandler[]

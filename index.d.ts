@@ -3,7 +3,7 @@ export interface NextApiRouteRequest extends NextApiRequest {
     params?: Record<string, any>;
     locals?: Record<string, any>;
 }
-export declare type NextApiRouteHandler = (req: NextApiRouteRequest, res: NextApiResponse) => void | Promise<void>;
+export declare type NextApiRouteHandler = (req: NextApiRouteRequest, res: NextApiResponse) => void | Promise<void> | boolean | Promise<boolean>;
 export declare type NextApiRouteExtraHandler = (pathNameOrPattern: string, ...nextApiHandlers: NextApiRouteHandler[]) => NextApiRouteMethodProxyType;
 export declare type NextApiRouteMaybePosibleMethod = "get" | "post" | "put" | "patch" | "delete" | "options" | "connect" | "all" | "handle";
 export declare type NextApiRouteMethodProxyType = {
