@@ -73,6 +73,8 @@ export function NextApiRoute(options?: NextapiRouteOptions) {
     ),
     routes = [],
     handle: NextApiRouteHandler = async (req, res) => {
+      req.locals = {}; // helper to save local variable
+      req.params = {}; // save params
       try {
         let q = req.query[key];
         let baseUrl = req.url
@@ -111,8 +113,7 @@ export function NextApiRoute(options?: NextapiRouteOptions) {
 
         for (let [_, rgx, handlers] of arrr) {
           if (!rgx) throw notFound;
-          req.params = rgx.groups;
-          req.locals = {};
+          Object.assign(req.params, rgx.groups);
           for (let handler of handlers) {
             next = await handler(req, res);
             if (res.writableFinished) {
